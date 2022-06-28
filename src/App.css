@@ -30,8 +30,9 @@
 }
 
 .btn {
+    /*background: #fffbfb;*/
     font-size: 14px;
-    width: 100px;
+    width: 200px;
     height: 100px;
 }
 

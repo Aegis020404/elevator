@@ -1,14 +1,15 @@
 import './App.css';
-import {useRef, useState} from "react";
-    let working = 0
+import {useEffect, useRef, useState} from "react";
+    let store = [5 ,5,5,5]
+    let working = store.map(()=>0)
     let brek = 0
 
 function App() {
-    let [elevater, setElevater] = useState([    5]  )
-    let [active, setActive] = useState([    2,   ]  )
-    let [efficiency, setEfficiency] = useState(elevater.map( el => true ) )
-    console.log(efficiency);
+    let [elevater, setElevater] = useState([    ...store]  )
+    let [active, setActive] = useState([    1,  1,1,1 ]  )
+
     let wrap = useRef(false)
+    let btns = useRef(false)
     const getShafts = () => <div className="tables" ref={wrap}>
         {elevater.map((n, i) => <div key={i} className="tables">
             {<div className="table">
@@ -17,7 +18,6 @@ function App() {
             </div>}
         </div>)}
     </div>
-
     const getElevators = n => {
         let arr = [];
         for (let i = 1; i <= n; i++) arr.push(i)
@@ -31,33 +31,52 @@ function App() {
         const max = Math.max(...elevater)
         for (let i = 1; i <= max; i++) arr.push(i)
         arr.reverse()
-        return arr.map(i => <button key={i} className='btn'>{i}</button>)
+        return arr.map(i => <button mykey={i} key={i} className='btn'>{i}</button>)
 
     }
+    useEffect(()=>{
+        // console.log(btns.current.children)
+        //
+        // console.log(active)
+            console.log(    Array.from(  new Set(active)  )      )
+        for(let elB of btns.current.children) {
+                console.log(elB.getAttribute('mykey') )
+            if(  Array.from(  new Set(active)  ).includes(elB.getAttribute('mykey')) ) {
+                debugger
+                elB.disabled = 'true';
+            } else {
+                elB.disabled = '';
+            }
+        }
+    },[active])
     const wrapMoveEl = el => {
         let index = 0
-        let activeer = wrap.current.firstElementChild.firstElementChild.lastElementChild  //.nextElementSibling
-        console.log(activeer)
-        for (let i = 0; i < elevater.length; i++) {
-            if(efficiency[i]) {
+        let activeer = wrap.current.firstElementChild//firstElementChild.lastElementChild  //.nextElementSibling
+        for (let i = 0; i < elevater.length; i++)
+            if( !working[i] && elevater[i] >= el.target.innerHTML) {
+                if(active[i] === +el.target.innerHTML) return undefined
                 index = i
+                activeer = activeer.lastElementChild
+                break;
+            }   else {
+                activeer = activeer.nextElementSibling
             }
-            console.log(i +'    ' + efficiency[i])
-        }
-        console.log(index)
-        // .nextElementSibling
-            // .lastElementChild
+
+
+
          moveEl(el,activeer,index)
 
     }
     const moveEl = (el, activeer,index) => {
-        if (el.target.tagName !== 'BUTTON' ) return
+        if (el.target.tagName !== 'BUTTON') return
             let h = el.target.innerHTML
         if (elevater[0] < h) return
-        if (working) {
-
+          try {
+              // el.target.disabled = true
+          } catch (e){}
+        if (working[index]) {
             setTimeout(()=> {
-                moveEl(el)
+                wrapMoveEl(el)
             } ,Math.abs(h - active) * 1000 + 3000)
 
             return undefined
@@ -65,44 +84,40 @@ function App() {
         let activeTime = setInterval(() => {
         setActive((state)=> {
             let initState = [...state]
-            if(initState[0] > h)  initState[0] = initState[0] - 1;
-            if(initState[0] < h)  initState[0] = initState[0] + 1;
-            if(initState[0] === +h)  clearInterval(activeTime)
+            if(initState[index] > h)  initState[index] = initState[index] - 1;
+            if(initState[index] < h)  initState[index] = initState[index] + 1;
+            if(initState[index] === +h)  clearInterval(activeTime)
             return [...initState]
         },)
         },1000)
 
-        setEfficiency((state) =>{
-            let initState = [...state]
-            initState[index] = false
-            return [...initState]
-        } )
 
-        working = 1
+        working[index] = 1
         setTimeout( function () {
             let timer = setInterval(() => {
-                if(activeer.firstElementChild)  activeer.firstElementChild.style.background = '#00ff00'
+                let activeEr = activeer.lastElementChild
+              try{    activeEr.firstElementChild.style.background = '#00ff00'  } catch(e) {}
                 if (brek%2) {
-                    activeer.style.opacity = 1
+                    try{         activeEr.style.opacity = 1 } catch(e) {}
                 } else {
-                activeer.style.opacity = 0.5
+                    try{        activeEr.style.opacity = 0.5 }catch(e) {}
                 }
                 brek++
                 if(brek >= 5) {
-                    activeer.firstElementChild.style.background = 'red'
+                    try{     activeEr.firstElementChild.style.background = 'red' } catch(e) {}
                     brek = 0
-                    activeer.style.opacity = 1
+                        try{   activeEr.style.opacity = 1 } catch(e) {}
                     clearInterval(timer)
-                    working = 0;
+                    working[index] = 0;
                 }
             },600)
-        },Math.abs(h - active)*1000)
+        },Math.abs(h - active)*1000) //1000
     }
     return (
         <div className="App">
             <div className="wrap" onClick={wrapMoveEl} >
                 {getShafts()}
-                <div className="btns">
+                <div className="btns" ref={btns}>
                     {getButtons()}
                 </div>
             </div>
